@@ -11,26 +11,36 @@ import Foundation
 class Account {
   var balance: Int = 0
   
-  func withdraw(amount: Int, completed: () -> ()) {
-    let newBalance = self.balance - amount
-    
-    if newBalance < 0 {
-      print("You don't have enough money to withdraw \(amount)")
-      return
+  private let queue = DispatchQueue(label: "test")
+  
+  func withdraw(amount: Int, completed: @escaping () -> ()) {
+    queue.async {
+      let newBalance = self.balance - amount
+      
+      if newBalance < 0 {
+        print("You don't have enough money to withdraw \(amount)")
+        return
+      }
+      
+      // Simulate processing of fraud checks
+      sleep(2)
+      
+      self.balance = newBalance
+      
+      DispatchQueue.main.async {
+        completed()
+      }
     }
-    
-    // Simulate processing of fraud checks
-    sleep(2)
-    
-    self.balance = newBalance
-    
-    completed()
   }
   
-  func deposit(amount: Int, completed: () -> ()) {
-    let newBalance = self.balance + amount
-    self.balance = newBalance
-    
-    completed()
+  func deposit(amount: Int, completed: @escaping () -> ()) {
+    queue.async {
+      let newBalance = self.balance + amount
+      self.balance = newBalance
+      
+      DispatchQueue.main.async {
+        completed()
+      }
+    }
   }
 }
